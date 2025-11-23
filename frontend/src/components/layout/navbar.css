@@ -1,0 +1,28 @@
+.app-navbar {
+    background: var(--color-surface);
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+}
+
+.nav-link-app {
+    color: var(--color-muted);
+    font-weight: 500;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.nav-link-app:hover {
+    color: var(--color-primary);
+}
+
+.nav-link-app.active {
+    color: var(--color-primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: 4px;
+}
+
+.navbar-logo h3 {
+    margin: 0;
+}

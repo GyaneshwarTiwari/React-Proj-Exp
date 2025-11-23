@@ -1,0 +1,41 @@
+.profile-menu-wrapper {
+    position: relative;
+    cursor: pointer;
+}
+
+.profile-icon {
+    padding: 6px;
+    border-radius: 50%;
+    background: var(--color-soft);
+    transition: 0.2s;
+}
+
+.profile-icon:hover {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.profile-dropdown {
+    position: absolute;
+    right: 0;
+    top: 42px;
+    background: white;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    min-width: 160px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    z-index: 1500;
+}
+
+.dropdown-item {
+    width: 100%;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background: var(--color-soft);
+}

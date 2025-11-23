@@ -1,0 +1,117 @@
+/* src/styles/theme.css */
+
+/* Google font (Inter) — it's OK if index.html also includes a font; this is fallback */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+:root {
+    /* Colors */
+    --color-primary: #4F46E5;
+    /* indigo */
+    --color-primary-600: #4338CA;
+    --color-accent: #10B981;
+    /* emerald */
+    --color-danger: #EF4444;
+    --color-bg: #F8FAFC;
+    /* very light */
+    --color-surface: #FFFFFF;
+    --color-muted: #6B7280;
+    --color-text: #111827;
+    --color-soft: #F3F4F6;
+
+    /* Spacing */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+
+    /* Radii */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+
+    /* Elevation */
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 6px 20px rgba(16, 24, 40, 0.08);
+}
+
+/* Utility helpers */
+.text-muted {
+    color: var(--color-muted) !important;
+}
+
+.bg-surface {
+    background: var(--color-surface) !important;
+}
+
+/* Buttons (bootstrap will still be used; these enhance primary look) */
+.btn-primary {
+    background: linear-gradient(180deg, var(--color-primary), var(--color-primary-600));
+    border: none;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.12);
+    color: #fff;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 1rem;
+}
+
+.btn-outline-primary {
+    border-radius: var(--radius-md);
+}
+
+/* Card base */
+.app-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 1rem;
+    border: 1px solid rgba(15, 23, 42, 0.03);
+}
+
+/* Small responsive helpers */
+.container-max {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+
+/* Typography */
+body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--color-bg);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.45;
+}
+
+/* Headings */
+h1,
+h2,
+h3,
+h4 {
+    color: var(--color-text);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+/* Links */
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Small screens adjustments for cards and layout */
+@media (max-width: 768px) {
+    .container-max {
+        padding: 0 12px;
+    }
+
+    .app-card {
+        padding: 0.75rem;
+    }
+}

@@ -1,0 +1,96 @@
+/* src/styles/global.css */
+
+/* Normalize-ish minimal rules */
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Simple utility spacing */
+.mt-1 {
+    margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+    margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+    margin-top: 1rem !important;
+}
+
+.mb-1 {
+    margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+/* Simple badges for category */
+.badge-category {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--color-primary);
+}
+
+/* Modal override to have rounded corners */
+.modal-content {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* Make tables more airy */
+.table td,
+.table th {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+/* Floating Add button (small) */
+.fab {
+    position: fixed;
+    right: 22px;
+    bottom: 28px;
+    z-index: 1200;
+    border-radius: 999px;
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, 0.18);
+    cursor: pointer;
+    border: none;
+}
+
+/* small form control rounded */
+.form-control {
+    border-radius: 10px;
+}
+
+/* small helper for subtle card header */
+.card-header-compact {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
