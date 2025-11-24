@@ -12,6 +12,7 @@ const goalsRoutes = require("./routes/goalsRoutes");
 const contributionRoutes = require("./routes/contributionRoutes")
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const exportRoutes = require("./routes/exportRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Error middleware
 const { errorHandler } = require("./middlewares/errorMiddleware");
@@ -32,6 +33,7 @@ app.use("/api/v1/goals", goalsRoutes);
 app.use("/api/v1/goals", contributionRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
 app.use("/api/v1/export", exportRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // Health check route
 app.get("/", (req, res) => {

@@ -19,6 +19,7 @@ import ExpensesPage from "./pages/ExpensesPage";
 import IncomePage from "./pages/IncomePage";
 import GoalsPage from "./pages/GoalsPage";
 import BudgetsPage from "./pages/BudgetsPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const App = () => {
   const auth = useContext(AuthContext);
@@ -62,6 +63,7 @@ const App = () => {
           >
             <Routes>
               <Route path="/" element={<DashboardPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/expenses" element={<ExpensesPage />} />
               <Route path="/income" element={<IncomePage />} />
               <Route path="/goals" element={<GoalsPage />} />

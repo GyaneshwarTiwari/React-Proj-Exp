@@ -58,3 +58,29 @@ exports.login = async (req, res, next) => {
         next(err);
     }
 };
+
+// PATCH /api/v1/auth/password
+exports.changePassword = async (req, res, next) => {
+    try {
+        const userId = req.user && req.user._id;
+        if (!userId) return res.status(401).json({ error: 'Not authenticated' });
+
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const match = await user.matchPassword(currentPassword);
+        if (!match) return res.status(400).json({ error: 'Current password is incorrect' });
+
+        user.password = newPassword;
+        await user.save();
+
+        return res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        next(err);
+    }
+};

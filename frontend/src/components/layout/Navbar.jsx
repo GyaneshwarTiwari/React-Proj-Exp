@@ -2,6 +2,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import ProfileMenu from "./ProfileMenu";
+import NotificationMenu from "./NotificationMenu";
 import "./navbar.css";
 
 const Navbar = ({ onToggleSidebar }) => {
@@ -43,8 +44,11 @@ const Navbar = ({ onToggleSidebar }) => {
                     <Link to="/budgets" className={`nav-link-app ${location.pathname === "/budgets" ? "active" : ""}`}>Budgets</Link>
                 </div>
 
-                {/* Right: profile */}
-                <ProfileMenu />
+                {/* Right: notifications + profile */}
+                <div className="d-flex align-items-center">
+                    <NotificationMenu />
+                    <ProfileMenu />
+                </div>
             </div>
         </nav>
     );
