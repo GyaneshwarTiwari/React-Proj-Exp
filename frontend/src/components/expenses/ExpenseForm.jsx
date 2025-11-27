@@ -6,6 +6,7 @@ const ExpenseForm = ({ open, onClose, onSubmit }) => {
         amount: "",
         date: "",
         description: "",
+        merchant: "",
         category: "Food",
     });
 
@@ -43,6 +44,16 @@ const ExpenseForm = ({ open, onClose, onSubmit }) => {
                     className="form-control"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+            </div>
+
+            <div className="mb-3">
+                <label>Merchant</label>
+                <input
+                    type="text"
+                    className="form-control"
+                    value={form.merchant}
+                    onChange={(e) => setForm({ ...form, merchant: e.target.value })}
                 />
             </div>
 

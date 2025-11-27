@@ -65,8 +65,32 @@ exports.getDashboardOverview = async (req, res, next) => {
         ]);
         const totalContributions = totalContribAgg[0]?.total || 0;
 
-        const netSavings = totalIncome - totalExpenses;
-        const netSavingsAfterGoals = totalIncome - totalExpenses - totalContributions;
+        // ---------- All-time totals for net savings ----------
+        const totalExpensesAllAgg = await Expense.aggregate([
+            { $match: { user: new mongoose.Types.ObjectId(userId), transactionType: 'expense' } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalExpensesAll = totalExpensesAllAgg[0]?.total || 0;
+
+        const totalIncomeAllAgg = await Income.aggregate([
+            { $match: { user: new mongoose.Types.ObjectId(userId) } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalIncomeAll = totalIncomeAllAgg[0]?.total || 0;
+
+        const totalContribAllAgg = await Expense.aggregate([
+            { $match: { user: new mongoose.Types.ObjectId(userId), transactionType: 'contribution' } },
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalContributionsAll = totalContribAllAgg[0]?.total || 0;
+
+        // Use all-time totals for net savings display
+        // All-time net savings (subtract contributions as well)
+        const netSavings = totalIncomeAll - totalExpensesAll - totalContributionsAll;
+        const netSavingsAfterGoals = netSavings; // kept for backward compatibility
+
+        // Monthly savings (for the selected/current month) - subtract contributions as well
+        const monthlySavings = totalIncome - totalExpenses - totalContributions;
 
         // ---------- 2) Expenses By Category (this month) ----------
         const expensesByCategory = await Expense.aggregate([
@@ -78,6 +102,19 @@ exports.getDashboardOverview = async (req, res, next) => {
                 }
             },
             { $group: { _id: "$category", total: { $sum: "$amount" } } },
+            { $sort: { total: -1 } }
+        ]);
+
+        // ---------- 2b) Expenses By Merchant (this month) ----------
+        const expensesByMerchant = await Expense.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(userId),
+                    transactionType: "expense",
+                    date: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
+            { $group: { _id: "$merchant", total: { $sum: "$amount" } } },
             { $sort: { total: -1 } }
         ]);
 
@@ -266,6 +303,7 @@ exports.getDashboardOverview = async (req, res, next) => {
                 totalExpenses,
                 totalIncome,
                 totalContributions,
+                monthlySavings,
                 netSavings,
                 netSavingsAfterGoals
             },
@@ -276,6 +314,7 @@ exports.getDashboardOverview = async (req, res, next) => {
                 contributions: contributionTrend
             },
             expensesByCategory,
+            expensesByMerchant,
             contributionsByGoal,
             budgetUsage,
             goals,

@@ -18,6 +18,7 @@ async function buildExcelBuffer(rows = []) {
     sheet.columns = [
         { header: 'Date', key: 'date', width: 20 },
         { header: 'Amount', key: 'amount', width: 15 },
+        { header: 'Merchant', key: 'merchant', width: 25 },
         { header: 'Category', key: 'category', width: 20 },
         { header: 'Description', key: 'description', width: 40 },
     ];
@@ -26,6 +27,7 @@ async function buildExcelBuffer(rows = []) {
         sheet.addRow({
             date: new Date(r.date).toLocaleString(),
             amount: r.amount,
+            merchant: r.merchant || '',
             category: r.category,
             description: r.description || ''
         });
@@ -59,7 +61,7 @@ function buildPdfBuffer(rows = []) {
         doc.fontSize(12);
         rows.forEach((r) => {
             doc.text(
-                `${new Date(r.date).toLocaleDateString()} — ${r.category} — ₹${r.amount} — ${r.description || ''}`
+                `${new Date(r.date).toLocaleDateString()} — ${r.category} — ${r.merchant ? r.merchant + ' — ' : ''}₹${r.amount} — ${r.description || ''}`
             );
         });
 

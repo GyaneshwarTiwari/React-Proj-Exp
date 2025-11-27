@@ -1,17 +1,67 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useContext } from 'react';
 import './profileMenu.css';
 import { getNotifications, markNotificationAsRead, markAllNotificationsRead, deleteNotification, deleteAllNotifications } from '../../services/notificationService';
 import { toast } from 'react-toastify';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import { getSocket, disconnectSocket } from '../../utils/socket';
+import { AuthContext } from '../../contexts/AuthContext';
 
 const NotificationMenu = () => {
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const auth = useContext(AuthContext);
     const wrapperRef = useRef(null);
 
     useEffect(() => {
-        loadNotifications();
-    }, []);
+        let s = null;
+        let attached = false;
+
+        const start = async () => {
+            await loadNotifications();
+
+            const token = auth?.token || localStorage.getItem('token');
+            if (!token) return;
+
+            s = getSocket(token);
+            if (!s) return;
+
+            // attach listeners once
+            const onNotif = (notif) => {
+                console.debug('[socket] received notification', notif);
+                setNotifications((prev) => [notif, ...prev]);
+                setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
+                toast.info(notif.title || 'New notification');
+            };
+
+            const onConnectError = (err) => console.warn('Socket connect_error', err?.message || err);
+            const onConnect = () => console.debug('[socket] connected');
+            const onDisconnect = (reason) => console.debug('[socket] disconnected', reason);
+
+            s.on('connect', onConnect);
+            s.on('disconnect', onDisconnect);
+            s.on('connect_error', onConnectError);
+            s.on('notification', onNotif);
+            attached = true;
+        };
+
+        start();
+
+        return () => {
+            try {
+                if (s && attached) {
+                    s.off('notification');
+                    s.off('connect_error');
+                    s.off('connect');
+                    s.off('disconnect');
+                }
+            } catch (err) {
+                console.warn('Error detaching socket listeners', err);
+            }
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.token]);
 
     useEffect(() => {
         function handleDown(e) {
@@ -29,12 +79,16 @@ const NotificationMenu = () => {
     }, []);
 
     const loadNotifications = async () => {
+        setLoading(true);
         try {
             const res = await getNotifications({ limit: 50 });
             setNotifications(res.notifications || []);
             setUnreadCount(res.unreadCount || 0);
         } catch (err) {
             console.error('Failed to load notifications', err);
+            toast.error('Failed to load notifications');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -116,8 +170,9 @@ const NotificationMenu = () => {
                     <div className="divider" />
 
                     <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                        {notifications.length === 0 && <div className="p-3 small text-muted">No notifications</div>}
-                        {notifications.map((n) => (
+                        {loading && <LoadingSpinner />}
+                        {!loading && notifications.length === 0 && <div className="p-3 small text-muted">No notifications</div>}
+                        {!loading && notifications.map((n) => (
                             <div key={n._id} className="dropdown-item" style={{ background: n.read ? 'transparent' : 'rgba(99,102,241,0.06)' }}>
                                 <div className="d-flex justify-content-between align-items-start">
                                     <div style={{ flex: 1 }}>

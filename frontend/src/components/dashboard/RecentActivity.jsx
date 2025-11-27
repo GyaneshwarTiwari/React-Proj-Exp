@@ -18,6 +18,7 @@ const RecentActivity = ({ expenses = [], contributions = [] }) => {
                                 {new Date(e.date).toLocaleDateString()}
                                 {" • "}
                                 {e.category}
+                                {e.merchant ? ` • ${e.merchant}` : ''}
                             </div>
                         </div>
                         <div className="text-danger fw-semibold">- ₹{e.amount}</div>

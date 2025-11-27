@@ -11,6 +11,7 @@ import ContributionsPieChart from "../components/dashboard/ContributionsPieChart
 import RecentActivity from "../components/dashboard/RecentActivity";
 
 import "../styles/dashboard.css";
+import MerchantBarChart from "../components/dashboard/MerchantBarChart";
 
 const DashboardPage = () => {
     const [data, setData] = useState(null);
@@ -50,6 +51,7 @@ const DashboardPage = () => {
     const monthlyTrend = data.monthlyTrend; // { expenses:[], income:[], contributions:[] }
     const expensesByCategory = data.expensesByCategory; // array of { _id, total }
     const contributionsByGoal = data.contributionsByGoal; // array { title, total }
+    const expensesByMerchant = data.expensesByMerchant;
     const goals = data.goals || [];
     const recentExpenses = data.recentTransactions || [];
     const recentContributions = data.recentContributions || [];
@@ -84,8 +86,8 @@ const DashboardPage = () => {
                 <div className="col-md-6">
                     <div className="app-card dashboard-chart-container">
                         <div style={{ width: '100%', height: '100%' }}>
-                            <h5 className="fw-semibold mb-3">Category Spend (Bar)</h5>
-                            <CategoryBarChart data={expensesByCategory} />
+                            <h5 className="fw-semibold mb-3">Expensditure per Merchant</h5>
+                            <MerchantBarChart data={expensesByMerchant} />
                         </div>
                     </div>
                 </div>

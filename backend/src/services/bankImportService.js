@@ -33,6 +33,7 @@ async function importFromBank(bankAccountId, userId) {
             amount: 250.0,
             date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 3)).toISOString(),
             description: 'Grocery Store',
+            merchant: 'Grocery Store',
             category: null // leave for categorization service to fill
         },
         {
@@ -40,6 +41,7 @@ async function importFromBank(bankAccountId, userId) {
             amount: 1200.0,
             date: new Date(now.getFullYear(), now.getMonth(), Math.max(1, now.getDate() - 10)).toISOString(),
             description: 'Monthly Rent',
+            merchant: 'Landlord',
             category: 'Housing'
         }
     ];

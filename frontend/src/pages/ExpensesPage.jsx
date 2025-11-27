@@ -195,6 +195,7 @@ const ExpensesPage = () => {
                         <thead>
                             <tr>
                                 <th>Date</th>
+                                <th>Merchant</th>
                                 <th>Category</th>
                                 <th>Description</th>
                                 <th>Amount</th>
@@ -205,6 +206,7 @@ const ExpensesPage = () => {
                             {expenses.map((exp) => (
                                 <tr key={exp._id}>
                                     <td>{exp.date?.split("T")[0]}</td>
+                                    <td>{exp.merchant || '-'}</td>
                                     <td>{exp.category}</td>
                                     <td>{exp.description}</td>
                                     <td>₹{exp.amount}</td>

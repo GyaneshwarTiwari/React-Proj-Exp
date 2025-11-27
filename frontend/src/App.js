@@ -31,9 +31,10 @@ const App = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
+    const LoadingSpinner = require('./components/ui/LoadingSpinner').default;
     return (
       <div style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        <div>Loading…</div>
+        <LoadingSpinner />
       </div>
     );
   }

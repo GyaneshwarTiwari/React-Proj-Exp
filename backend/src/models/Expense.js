@@ -7,6 +7,7 @@ const expenseSchema = new mongoose.Schema({
     date: { type: Date, required: true, index: true },
     description: { type: String, trim: true, default: '' },
     category: { type: String, required: true, trim: true },
+    merchant: { type: String, trim: true, default: '' },
     source: { type: String, enum: ['manual', 'imported'], default: 'manual' },
     transactionType: { type: String, enum: ['expense', 'contribution'], default: 'expense' },
     goal: { type: mongoose.Schema.Types.ObjectId, ref: 'Goal', default: null },

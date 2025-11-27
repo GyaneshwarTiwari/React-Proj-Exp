@@ -3,11 +3,17 @@ import React from "react";
 const SummaryCards = ({ totals }) => {
     if (!totals) return null;
 
+    const fmt = (v) => {
+        const n = Number(v || 0);
+        return n.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    };
+
     const cards = [
-        { label: "Total Expenses", value: totals.totalExpenses, color: "#EF4444" },
-        { label: "Total Income", value: totals.totalIncome, color: "#10B981" },
-        { label: "Contributions", value: totals.totalContributions, color: "#6366F1" },
-        { label: "Net Savings", value: totals.netSavings, color: "#0EA5E9" },
+        { label: "Total Expenses", value: fmt(totals.totalExpenses), color: "#EF4444" },
+        { label: "Total Income", value: fmt(totals.totalIncome), color: "#10B981" },
+        { label: "Contributions", value: fmt(totals.totalContributions), color: "#6366F1" },
+        { label: "Monthly Savings", value: fmt(totals.monthlySavings), color: "#0EA5E9" },
+        { label: "Net Savings (All Time)", value: fmt(totals.netSavings), color: "#0EA5E9" }
     ];
 
     return (

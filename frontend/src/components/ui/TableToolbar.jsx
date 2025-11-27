@@ -11,29 +11,49 @@ const TableToolbar = ({
     showImport = false,
     showExport = true,
     categoryOptions = null,
+    merchantOptions = null,
 }) => {
     const defaultCategories = ["Food", "Travel", "Health", "Shopping", "Utilities"];
     const categories = Array.isArray(categoryOptions) ? categoryOptions : defaultCategories;
+
+    const defaultMerchants = ["Amazon", "Flipkart", "Swiggy", "Zomato", "Unknown"];
+    const merchants = Array.isArray(merchantOptions) ? merchantOptions : defaultMerchants;
+
     return (
         <div className="d-flex flex-wrap justify-content-between align-items-center mb-3">
             {/* Filters */}
             <div className="d-flex flex-wrap gap-2">
                 <input
-                    type="date"
+                    type={filters.startDate ? "date" : "text"}
+                    placeholder="Start Date"
                     className="form-control"
                     style={{ width: 150 }}
                     value={filters.startDate}
-                    onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
+                    onFocus={(e) => (e.target.type = "date")}
+                    onBlur={(e) => {
+                        if (!filters.startDate) e.target.type = "text";
+                    }}
+                    onChange={(e) =>
+                        setFilters({ ...filters, startDate: e.target.value })
+                    }
                 />
 
                 <input
-                    type="date"
+                    type={filters.endDate ? "date" : "text"}
+                    placeholder="End Date"
                     className="form-control"
                     style={{ width: 150 }}
                     value={filters.endDate}
-                    onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
+                    onFocus={(e) => (e.target.type = "date")}
+                    onBlur={(e) => {
+                        if (!filters.endDate) e.target.type = "text";
+                    }}
+                    onChange={(e) =>
+                        setFilters({ ...filters, endDate: e.target.value })
+                    }
                 />
 
+                {/* Category Filter */}
                 <select
                     className="form-select"
                     style={{ width: 150 }}
@@ -47,6 +67,22 @@ const TableToolbar = ({
                         </option>
                     ))}
                 </select>
+
+                {/* Merchant Filter (NEW) */}
+                <select
+                    className="form-select"
+                    style={{ width: 150 }}
+                    value={filters.merchant}
+                    onChange={(e) => setFilters({ ...filters, merchant: e.target.value })}
+                >
+                    <option value="">All Merchants</option>
+                    {merchants.map((m) => (
+                        <option key={m} value={m}>
+                            {m}
+                        </option>
+                    ))}
+                </select>
+
                 <button
                     className="btn btn-outline-secondary"
                     onClick={() => {
@@ -76,7 +112,6 @@ const TableToolbar = ({
                                 Export Excel
                             </button>
                         )}
-                        {/* legacy single export handler */}
                         {!onExportPdf && !onExportExcel && onExport && (
                             <button className="btn btn-outline-secondary" onClick={onExport}>
                                 Export
@@ -84,11 +119,13 @@ const TableToolbar = ({
                         )}
                     </>
                 )}
+
                 {showImport && (
                     <button className="btn btn-outline-primary" onClick={onImport}>
                         Import
                     </button>
                 )}
+
                 <button className="btn btn-primary" onClick={onAdd}>
                     + Add
                 </button>

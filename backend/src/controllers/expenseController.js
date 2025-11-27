@@ -17,13 +17,15 @@ exports.getExpenses = async (req, res, next) => {
     try {
         const userId = req.user._id;
 
-
-        const { category, from, to, startDate, endDate } = req.query;
+        const { category, merchant, from, to, startDate, endDate } = req.query;
 
         const filter = { user: userId, transactionType: "expense" };
 
         // optional filters
         if (category) filter.category = category;
+
+        // Merchant filter:
+        if (merchant) filter.merchant = merchant;
 
         // Support both from/to and startDate/endDate
         let dateFilter = {};
@@ -108,7 +110,7 @@ async function checkBudgetAfterExpense(userId, category, expenseDate) {
 exports.addExpense = async (req, res, next) => {
     try {
         const userId = req.user._id;
-        const { amount, date, description, category, source = 'manual', transactionType = 'expense', goal: goalId } = req.body;
+        const { amount, date, description, category, merchant = '', source = 'manual', transactionType = 'expense', goal: goalId } = req.body;
 
         if (!amount || !date || !category) {
             return res.status(400).json({ error: 'amount, date and category are required' });
@@ -130,6 +132,7 @@ exports.addExpense = async (req, res, next) => {
                 amount,
                 date,
                 description,
+                merchant,
                 category,
                 source,
                 transactionType,
@@ -173,6 +176,7 @@ exports.addExpense = async (req, res, next) => {
                 amount,
                 date,
                 description,
+                merchant,
                 category,
                 source,
                 transactionType,
@@ -227,6 +231,7 @@ exports.importExpenses = async (req, res, next) => {
                     amount: txn.amount,
                     date: txn.date,
                     description: txn.description,
+                    merchant: txn.merchant || txn.description || '',
                     category,
                     source: 'imported',
                     transactionType: 'expense',

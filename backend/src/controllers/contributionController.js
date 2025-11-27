@@ -15,6 +15,7 @@ exports.addContribution = async (req, res, next) => {
         session.startTransaction();
 
         try {
+            const { merchant = '' } = req.body || {};
             const contribution = await Expense.create(
                 [
                     {
@@ -22,6 +23,7 @@ exports.addContribution = async (req, res, next) => {
                         amount,
                         date,
                         description,
+                        merchant,
                         category: "Savings",
                         transactionType: "contribution",
                         goal: goalId,

@@ -5,15 +5,8 @@
 
 const Notification = require('../models/Notification');
 
-let io;
-try {
-    // socket.js is optional at this stage; if present it should export getIo()
-    // Example socket.js: module.exports.getIo = () => ioInstance;
-    io = require('../socket').getIo();
-} catch (err) {
-    // socket not set up yet — that's fine
-    io = null;
-}
+// We'll resolve io at emit time to avoid the module load-time ordering issue
+// where this service is required before socket.init(server) is called.
 
 /**
  * createAndDeliver
@@ -32,12 +25,18 @@ async function createAndDeliver(userId, payload = {}) {
         message,
         metadata
     });
+    console.debug(`[notificationService] created notification for user=${userId} id=${notif._id}`);
 
-    // 2) Emit via Socket.io if available
+    // 2) Emit via Socket.io if available. Resolve getIo() at runtime to handle
+    // module load-order where socket may be initialized after this module.
     try {
-        if (io) {
-            // Emit to a room named after the userId (string)
-            io.to(String(userId)).emit('notification', notif);
+        const socketModule = require('../socket');
+        const runtimeIo = socketModule && typeof socketModule.getIo === 'function' ? socketModule.getIo() : null;
+        if (runtimeIo) {
+            runtimeIo.to(String(userId)).emit('notification', notif);
+            console.debug(`[notificationService] emitted notification to user=${userId}`);
+        } else {
+            console.debug('[notificationService] socket.io instance not available; skipping emit');
         }
     } catch (emitErr) {
         console.warn('Warning: failed to emit notification via socket:', emitErr.message || emitErr);

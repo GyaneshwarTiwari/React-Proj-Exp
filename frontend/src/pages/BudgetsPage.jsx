@@ -48,8 +48,11 @@ const BudgetsPage = () => {
     // CREATE
     const handleAddBudget = async (formData) => {
         try {
-            await createBudget(formData);
+            const res = await createBudget(formData);
             toast.success("Budget created!");
+            if (res?.warning?.exceedsMonthlySavings) {
+                toast.warn(res.warning.message || 'Total budgets exceed monthly savings');
+            }
             setShowAddModal(false);
             loadBudgets();
         } catch (err) {
@@ -61,8 +64,11 @@ const BudgetsPage = () => {
     // EDIT
     const handleUpdateBudget = async (formData) => {
         try {
-            await updateBudget(budgetToEdit._id, formData);
+            const res = await updateBudget(budgetToEdit._id, formData);
             toast.success("Budget updated!");
+            if (res?.warning?.exceedsMonthlySavings) {
+                toast.warn(res.warning.message || 'Total budgets exceed monthly savings');
+            }
             setShowEditModal(false);
             loadBudgets();
         } catch (err) {
