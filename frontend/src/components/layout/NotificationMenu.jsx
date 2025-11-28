@@ -1,82 +1,65 @@
+// src/components/layout/NotificationMenu.jsx
 import React, { useEffect, useRef, useState, useContext } from 'react';
-import './profileMenu.css';
+import '../../styles/menus.css'; // Updated CSS import
 import { getNotifications, markNotificationAsRead, markAllNotificationsRead, deleteNotification, deleteAllNotifications } from '../../services/notificationService';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../ui/LoadingSpinner';
-import { getSocket, disconnectSocket } from '../../utils/socket';
+import { getSocket } from '../../utils/socket';
 import { AuthContext } from '../../contexts/AuthContext';
 
 const NotificationMenu = () => {
     const [open, setOpen] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false); // Changed default to false to prevent spinner on first render before click
     const auth = useContext(AuthContext);
     const wrapperRef = useRef(null);
+    const hasLoadedRef = useRef(false); // Track if we've fetched data
 
+    // --- Socket Logic (Kept same) ---
     useEffect(() => {
         let s = null;
         let attached = false;
 
-        const start = async () => {
-            await loadNotifications();
+        // Only connect socket if we have a token
+        const token = auth?.token || localStorage.getItem('token');
+        if (!token) return;
 
-            const token = auth?.token || localStorage.getItem('token');
-            if (!token) return;
+        s = getSocket(token);
+        if (!s) return;
 
-            s = getSocket(token);
-            if (!s) return;
-
-            // attach listeners once
-            const onNotif = (notif) => {
-                console.debug('[socket] received notification', notif);
-                setNotifications((prev) => [notif, ...prev]);
-                setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
-                toast.info(notif.title || 'New notification');
-            };
-
-            const onConnectError = (err) => console.warn('Socket connect_error', err?.message || err);
-            const onConnect = () => console.debug('[socket] connected');
-            const onDisconnect = (reason) => console.debug('[socket] disconnected', reason);
-
-            s.on('connect', onConnect);
-            s.on('disconnect', onDisconnect);
-            s.on('connect_error', onConnectError);
-            s.on('notification', onNotif);
-            attached = true;
+        const onNotif = (notif) => {
+            console.debug('[socket] received notification', notif);
+            setNotifications((prev) => [notif, ...prev]);
+            setUnreadCount((c) => (typeof c === 'number' ? c + 1 : 1));
+            toast.info(notif.title || 'New notification');
         };
 
-        start();
+        s.on('notification', onNotif);
+        attached = true;
 
         return () => {
-            try {
-                if (s && attached) {
-                    s.off('notification');
-                    s.off('connect_error');
-                    s.off('connect');
-                    s.off('disconnect');
-                }
-            } catch (err) {
-                console.warn('Error detaching socket listeners', err);
-            }
+            if (s && attached) s.off('notification');
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [auth?.token]);
 
+    // --- Click Outside ---
     useEffect(() => {
         function handleDown(e) {
-            if (!wrapperRef.current) return;
-            if (!wrapperRef.current.contains(e.target)) {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
                 setOpen(false);
             }
         }
         document.addEventListener('mousedown', handleDown);
-        document.addEventListener('touchstart', handleDown);
-        return () => {
-            document.removeEventListener('mousedown', handleDown);
-            document.removeEventListener('touchstart', handleDown);
-        };
+        return () => document.removeEventListener('mousedown', handleDown);
     }, []);
+
+    // Load notifications only when opened for the first time
+    useEffect(() => {
+        if (open && !hasLoadedRef.current) {
+            loadNotifications();
+        }
+    }, [open]);
 
     const loadNotifications = async () => {
         setLoading(true);
@@ -84,28 +67,31 @@ const NotificationMenu = () => {
             const res = await getNotifications({ limit: 50 });
             setNotifications(res.notifications || []);
             setUnreadCount(res.unreadCount || 0);
+            hasLoadedRef.current = true;
         } catch (err) {
-            console.error('Failed to load notifications', err);
-            toast.error('Failed to load notifications');
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleOpen = () => {
-        setOpen((s) => !s);
-    };
-
-    const handleMarkRead = async (id) => {
+    // --- Actions ---
+    const handleMarkRead = async (id, e) => {
+        e.stopPropagation();
         try {
             const res = await markNotificationAsRead(id);
-            // update local list
             setNotifications((prev) => prev.map(n => n._id === id ? { ...n, read: true } : n));
             setUnreadCount(res.unreadCount ?? Math.max(0, unreadCount - 1));
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to mark notification read');
-        }
+        } catch (err) { toast.error('Action failed'); }
+    };
+
+    const handleDelete = async (id, e) => {
+        e.stopPropagation();
+        try {
+            const res = await deleteNotification(id);
+            setNotifications((prev) => prev.filter(n => n._id !== id));
+            setUnreadCount(res.unreadCount ?? Math.max(0, unreadCount - 1));
+        } catch (err) { toast.error('Delete failed'); }
     };
 
     const handleMarkAllRead = async () => {
@@ -113,79 +99,97 @@ const NotificationMenu = () => {
             await markAllNotificationsRead();
             setNotifications((prev) => prev.map(n => ({ ...n, read: true })));
             setUnreadCount(0);
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to mark all read');
-        }
-    };
-
-    const handleDelete = async (id) => {
-        try {
-            const res = await deleteNotification(id);
-            setNotifications((prev) => prev.filter(n => n._id !== id));
-            setUnreadCount(res.unreadCount ?? Math.max(0, unreadCount - 1));
-            toast.success('Notification deleted');
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to delete notification');
-        }
+        } catch (err) { toast.error('Failed'); }
     };
 
     const handleClearAll = async () => {
-        if (!window.confirm('Delete ALL notifications? This cannot be undone.')) return;
+        if (!window.confirm('Clear all history?')) return;
         try {
-            const res = await deleteAllNotifications();
+            await deleteAllNotifications();
             setNotifications([]);
             setUnreadCount(0);
-            toast.success(`Deleted ${res.deletedCount || 0} notifications`);
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to delete all notifications');
-        }
+        } catch (err) { toast.error('Failed'); }
+    };
+
+    // Helper for time format
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+
+        if (diffInSeconds < 60) return 'Just now';
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+        return date.toLocaleDateString();
     };
 
     return (
-        <div className="profile-menu-wrapper me-2" ref={wrapperRef}>
-            <button className="profile-icon btn-reset position-relative" onClick={handleOpen} aria-label="Notifications">
+        <div className="position-relative" ref={wrapperRef}>
+            <button
+                className="menu-trigger-btn"
+                onClick={() => setOpen(!open)}
+                aria-expanded={open}
+                aria-label="Notifications"
+            >
                 <i className="bi bi-bell" style={{ fontSize: '1.25rem' }}></i>
                 {unreadCount > 0 && (
-                    <span className="badge bg-danger position-absolute" style={{ top: -6, right: -6 }}>{unreadCount}</span>
+                    <span className="notification-badge">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                 )}
             </button>
 
             {open && (
-                <div className="profile-dropdown shadow-sm" style={{ minWidth: 320 }}>
-                    <div className="profile-header">
-                        <div className="profile-meta">
-                            <div className="name">Notifications</div>
-                            <div className="email small text-muted">Recent activity and alerts</div>
+                <div className="dropdown-panel notification-panel">
+                    {/* Header */}
+                    <div className="panel-header">
+                        <div>
+                            <h4 className="panel-title">Notifications</h4>
+                            <p className="panel-subtitle">You have {unreadCount} unread messages</p>
                         </div>
-                        {notifications.length > 0 && (
-                            <div className="profile-actions">
-                                <button className="btn btn-sm btn-link me-2" onClick={handleMarkAllRead}>Mark all read</button>
-                                <button className="btn btn-sm btn-link text-danger" onClick={handleClearAll}>Clear all</button>
+                        <div className="d-flex gap-2">
+                            <button className="btn btn-link p-0 text-decoration-none small fw-semibold" onClick={handleMarkAllRead} style={{ fontSize: '0.8rem' }}>
+                                Read All
+                            </button>
+                            <button className="btn btn-link p-0 text-decoration-none small text-muted hover-danger" onClick={handleClearAll} style={{ fontSize: '0.8rem' }}>
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* List */}
+                    <div className="panel-list">
+                        {loading && <div className="p-4"><LoadingSpinner /></div>}
+
+                        {!loading && notifications.length === 0 && (
+                            <div className="p-5 text-center text-muted">
+                                <i className="bi bi-bell-slash mb-2 d-block" style={{ fontSize: '1.5rem', opacity: 0.5 }}></i>
+                                <span className="small">No notifications yet</span>
                             </div>
                         )}
-                    </div>
-                    <div className="divider" />
 
-                    <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                        {loading && <LoadingSpinner />}
-                        {!loading && notifications.length === 0 && <div className="p-3 small text-muted">No notifications</div>}
                         {!loading && notifications.map((n) => (
-                            <div key={n._id} className="dropdown-item" style={{ background: n.read ? 'transparent' : 'rgba(99,102,241,0.06)' }}>
-                                <div className="d-flex justify-content-between align-items-start">
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 600 }}>{n.title}</div>
-                                        <div className="small text-muted">{n.message}</div>
-                                        <div className="small text-muted mt-1">{new Date(n.createdAt).toLocaleString()}</div>
-                                    </div>
-                                    <div className="ms-2 d-flex flex-column align-items-end gap-2">
-                                        <div>
-                                            {!n.read && <button className="btn btn-sm btn-outline-primary me-2" onClick={() => handleMarkRead(n._id)}>Mark read</button>}
-                                            <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(n._id)}>Delete</button>
-                                        </div>
-                                    </div>
+                            <div key={n._id} className={`notif-item ${!n.read ? 'unread' : ''}`}>
+                                {/* Status Dot */}
+                                <div className="notif-dot" title={n.read ? "Read" : "Unread"}></div>
+
+                                {/* Content */}
+                                <div className="notif-content">
+                                    <div className="notif-title">{n.title}</div>
+                                    <div className="notif-message">{n.message}</div>
+                                    <div className="notif-time">{formatTime(n.createdAt)}</div>
+                                </div>
+
+                                {/* Hover Actions */}
+                                <div className="notif-actions">
+                                    {!n.read && (
+                                        <button className="icon-btn-sm" title="Mark as read" onClick={(e) => handleMarkRead(n._id, e)}>
+                                            <i className="bi bi-check2"></i>
+                                        </button>
+                                    )}
+                                    <button className="icon-btn-sm danger" title="Delete" onClick={(e) => handleDelete(n._id, e)}>
+                                        <i className="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </div>
                         ))}

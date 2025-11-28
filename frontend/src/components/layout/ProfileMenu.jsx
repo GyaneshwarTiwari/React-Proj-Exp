@@ -1,62 +1,63 @@
 // src/components/layout/ProfileMenu.jsx
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import "./profileMenu.css";
+import "../../styles/menus.css"; // Shared CSS
 import { useNavigate } from 'react-router-dom';
 
 const ProfileMenu = () => {
-    const { logout } = useContext(AuthContext);
+    const { logout, user } = useContext(AuthContext); // Assuming user object has name/email
     const [open, setOpen] = useState(false);
     const wrapperRef = useRef(null);
     const navigate = useNavigate();
 
-    // Close when clicking outside or pressing Escape
+    // Close when clicking outside
     useEffect(() => {
         function handleDown(e) {
-            if (!wrapperRef.current) return;
-            if (!wrapperRef.current.contains(e.target)) {
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
                 setOpen(false);
             }
         }
-
-        function handleKey(e) {
-            if (e.key === "Escape") setOpen(false);
-        }
-
         document.addEventListener("mousedown", handleDown);
-        document.addEventListener("touchstart", handleDown);
-        document.addEventListener("keydown", handleKey);
-
-        return () => {
-            document.removeEventListener("mousedown", handleDown);
-            document.removeEventListener("touchstart", handleDown);
-            document.removeEventListener("keydown", handleKey);
-        };
+        return () => document.removeEventListener("mousedown", handleDown);
     }, []);
 
+    // Mock user data if not available in context yet
+    const userName = user?.name || "User";
+    const userEmail = user?.email || "Manage your account";
+
     return (
-        <div className="profile-menu-wrapper" ref={wrapperRef}>
+        <div className="position-relative" ref={wrapperRef}>
             <button
                 aria-expanded={open}
                 aria-label="Profile menu"
-                className="profile-icon btn-reset"
+                className="menu-trigger-btn"
                 onClick={() => setOpen((s) => !s)}
             >
-                <i className="bi bi-person-circle" aria-hidden style={{ fontSize: "1.5rem" }}></i>
+                <i className="bi bi-person-circle" style={{ fontSize: "1.5rem" }}></i>
             </button>
 
             {open && (
-                <div className="profile-dropdown shadow-sm" role="menu">
+                <div className="dropdown-panel profile-panel">
 
-                    <button className="dropdown-item" onClick={() => { setOpen(false); navigate('/reset-password'); }}>
-                        Reset Password
-                    </button>
-                    <button
-                        className="dropdown-item text-danger fw-semibold"
-                        onClick={logout}
-                    >
-                        Logout
-                    </button>
+                    {/* Menu Items */}
+                    <div className="py-2">
+                        <button className="profile-menu-item" onClick={() => { setOpen(false); navigate('/'); }}>
+                            <i className="bi bi-speedometer2"></i>
+                            Dashboard
+                        </button>
+
+                        <button className="profile-menu-item" onClick={() => { setOpen(false); navigate('/reset-password'); }}>
+                            <i className="bi bi-shield-lock"></i>
+                            Reset Password
+                        </button>
+
+                        <div className="my-1 border-top border-light"></div>
+
+                        <button className="profile-menu-item text-danger" onClick={logout}>
+                            <i className="bi bi-box-arrow-right text-danger"></i>
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
