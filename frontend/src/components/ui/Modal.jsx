@@ -1,47 +1,72 @@
-import React, { useEffect } from "react";
-import "./modal.css";
+import React, { useEffect } from 'react';
 
-const Modal = ({
-    open,
-    title,
-    children,
-    onClose,
-    onSubmit,
-    submitLabel = "Save",
-    size = "md",
-}) => {
-    // Close modal on ESC key
+const Modal = ({ open, onClose, onSubmit, title, submitLabel = "Save", children }) => {
+    // Prevent scrolling on the body when modal is open
     useEffect(() => {
-        const esc = (e) => e.key === "Escape" && onClose();
-        document.addEventListener("keydown", esc);
-        return () => document.removeEventListener("keydown", esc);
-    }, [onClose]);
+        if (open) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [open]);
 
     if (!open) return null;
 
     return (
-        <div className="app-modal-overlay" onClick={onClose}>
+        <>
+            {/* Backdrop */}
             <div
-                className={`app-modal app-modal-${size}`}
-                onClick={(e) => e.stopPropagation()}
+                className="modal-backdrop fade show"
+                style={{ zIndex: 1050 }}
+                onClick={onClose}
+            ></div>
+
+            {/* Modal */}
+            <div
+                className="modal fade show d-block"
+                tabIndex="-1"
+                role="dialog"
+                style={{ zIndex: 1055 }}
             >
-                <div className="app-modal-header">
-                    <h5 className="m-0">{title}</h5>
-                    <button className="btn-close" onClick={onClose} />
-                </div>
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content shadow-lg border-0 rounded-4">
+                        <div className="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                            <h5 className="modal-title fw-bold">{title}</h5>
+                            <button
+                                type="button"
+                                className="btn-close"
+                                onClick={onClose}
+                                aria-label="Close"
+                            ></button>
+                        </div>
 
-                <div className="app-modal-body">{children}</div>
+                        <div className="modal-body p-4">
+                            {children}
+                        </div>
 
-                <div className="app-modal-footer">
-                    <button className="btn btn-light" onClick={onClose}>
-                        Cancel
-                    </button>
-                    <button className="btn btn-primary" onClick={onSubmit}>
-                        {submitLabel}
-                    </button>
+                        <div className="modal-footer border-top-0 pt-0 px-4 pb-4">
+                            <button
+                                type="button"
+                                className="btn btn-light rounded-pill px-4"
+                                onClick={onClose}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary rounded-pill px-4"
+                                onClick={onSubmit}
+                            >
+                                {submitLabel}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

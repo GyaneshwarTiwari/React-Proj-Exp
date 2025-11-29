@@ -1,76 +1,233 @@
-import React, { useState } from "react";
+// src/components/expenses/EditExpenseModal.jsx
+import React, { useState, useEffect } from "react";
 import Modal from "../ui/Modal";
 
+const PREDEFINED_MERCHANTS = [
+    "Amazon", "Flipkart", "Uber", "Ola", "Zomato", "Swiggy",
+    "Starbucks", "McDonalds", "KFC", "Dominos",
+    "Netflix", "Spotify", "Apple", "Google",
+    "Shell", "Indian Oil", "Reliance Smart", "D-Mart",
+    "Apollo Pharmacy", "Local Vendor"
+];
+
 const EditExpenseModal = ({ open, onClose, onSubmit, data }) => {
+    // Helper to get today's date
+    const getTodayString = () => new Date().toISOString().split('T')[0];
+
     const [form, setForm] = useState({
-        amount: data.amount,
-        date: data.date.split("T")[0],
-        description: data.description,
-        merchant: data.merchant || '',
-        category: data.category,
+        amount: "",
+        date: "",
+        description: "",
+        merchant: "",
+        category: "Food",
     });
 
+    const [merchantOption, setMerchantOption] = useState("");
+    const [errors, setErrors] = useState({});
+
+    // Sync state with data when modal opens
+    useEffect(() => {
+        if (open && data) {
+            const initialMerchant = data.merchant || "";
+            const isPredefined = PREDEFINED_MERCHANTS.includes(initialMerchant);
+
+            setForm({
+                amount: data.amount,
+                date: data.date ? data.date.split("T")[0] : getTodayString(),
+                description: data.description || "",
+                merchant: initialMerchant,
+                category: data.category || "Food",
+            });
+
+            // Set Dropdown Logic based on existing data
+            if (isPredefined) {
+                setMerchantOption(initialMerchant);
+            } else if (initialMerchant) {
+                setMerchantOption("Other");
+            } else {
+                setMerchantOption("");
+            }
+
+            setErrors({});
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open, data]);
+
+    const validate = () => {
+        const newErrors = {};
+        const today = getTodayString();
+
+        // 1. Amount
+        if (!form.amount) {
+            newErrors.amount = "Amount is required";
+        } else if (Number(form.amount) <= 0) {
+            newErrors.amount = "Amount must be greater than 0";
+        }
+
+        // 2. Date
+        if (!form.date) {
+            newErrors.date = "Date is required";
+        } else if (form.date > today) {
+            newErrors.date = "Date cannot be in the future";
+        }
+
+        // 3. Merchant
+        if (!form.merchant.trim()) {
+            newErrors.merchant = "Please select or enter a merchant";
+        }
+
+        // 4. Category
+        if (!form.category) newErrors.category = "Category is required";
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleChange = (field, value) => {
+        setForm({ ...form, [field]: value });
+        if (errors[field]) setErrors({ ...errors, [field]: null });
+    };
+
+    const handleMerchantSelect = (e) => {
+        const value = e.target.value;
+        setMerchantOption(value);
+
+        if (value === "Other") {
+            // Keep existing merchant if it was already custom, or clear if switching from predefined
+            if (PREDEFINED_MERCHANTS.includes(form.merchant)) {
+                setForm({ ...form, merchant: "" });
+            }
+        } else {
+            setForm({ ...form, merchant: value });
+            if (errors.merchant) setErrors({ ...errors, merchant: null });
+        }
+    };
+
     const handleSubmit = () => {
-        onSubmit(form);
+        if (validate()) {
+            onSubmit(form);
+        }
     };
 
     return (
-        <Modal open={open} onClose={onClose} onSubmit={handleSubmit} title="Edit Expense">
-            <div className="mb-3">
-                <label>Amount</label>
-                <input
-                    type="number"
-                    className="form-control"
-                    value={form.amount}
-                    onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                />
+        <Modal
+            open={open}
+            onClose={onClose}
+            onSubmit={handleSubmit}
+            title="Edit Expense"
+            submitLabel="Save Changes"
+        >
+            <div className="row g-3">
+                {/* Amount */}
+                <div className="col-12">
+                    <label className="form-label small fw-bold text-muted">Amount</label>
+                    <div className="input-group">
+                        <span className="input-group-text bg-light text-muted border-end-0">₹</span>
+                        <input
+                            type="number"
+                            className={`form-control border-start-0 ps-0 ${errors.amount ? "is-invalid" : ""}`}
+                            value={form.amount}
+                            onChange={(e) => handleChange("amount", e.target.value)}
+                            min="0.01"
+                            step="0.01"
+                        />
+                        {errors.amount && <div className="invalid-feedback ms-2">{errors.amount}</div>}
+                    </div>
+                </div>
+
+                {/* Date */}
+                <div className="col-md-6">
+                    <label className="form-label small fw-bold text-muted">Date</label>
+                    <input
+                        type="date"
+                        className={`form-control ${errors.date ? "is-invalid" : ""}`}
+                        value={form.date}
+                        onChange={(e) => handleChange("date", e.target.value)}
+                        max={getTodayString()}
+                    />
+                    {errors.date && <div className="invalid-feedback">{errors.date}</div>}
+                </div>
+
+                {/* Category */}
+                <div className="col-md-6">
+                    <label className="form-label small fw-bold text-muted">Category</label>
+                    <select
+                        className="form-select"
+                        value={form.category}
+                        onChange={(e) => handleChange("category", e.target.value)}
+                    >
+                        <option value="Food">Food</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Health">Health</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Bills">Bills</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Education">Education</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                {/* Merchant Logic */}
+                <div className="col-12">
+                    <label className="form-label small fw-bold text-muted">Merchant / Store</label>
+
+                    <div className="input-group">
+                        <span className="input-group-text bg-light text-muted">
+                            <i className="bi bi-shop"></i>
+                        </span>
+                        <select
+                            className={`form-select ${errors.merchant && merchantOption !== "Other" ? "is-invalid" : ""}`}
+                            value={merchantOption}
+                            onChange={handleMerchantSelect}
+                        >
+                            <option value="">-- Select Merchant --</option>
+                            {PREDEFINED_MERCHANTS.map((m) => (
+                                <option key={m} value={m}>{m}</option>
+                            ))}
+                            <option value="Other">Other (Type custom name)</option>
+                        </select>
+                        {errors.merchant && merchantOption !== "Other" && (
+                            <div className="invalid-feedback ms-2">{errors.merchant}</div>
+                        )}
+                    </div>
+
+                    {/* Custom Input */}
+                    {merchantOption === "Other" && (
+                        <div className="mt-2 animate-fade-in">
+                            <input
+                                type="text"
+                                className={`form-control ${errors.merchant ? "is-invalid" : ""}`}
+                                placeholder="Enter custom merchant name..."
+                                value={form.merchant}
+                                onChange={(e) => handleChange("merchant", e.target.value)}
+                            />
+                            {errors.merchant && <div className="invalid-feedback">{errors.merchant}</div>}
+                        </div>
+                    )}
+                </div>
+
+                {/* Description */}
+                <div className="col-12">
+                    <label className="form-label small fw-bold text-muted">Description (Optional)</label>
+                    <textarea
+                        className="form-control"
+                        rows="2"
+                        value={form.description}
+                        onChange={(e) => handleChange("description", e.target.value)}
+                    />
+                </div>
             </div>
 
-            <div className="mb-3">
-                <label>Date</label>
-                <input
-                    type="date"
-                    className="form-control"
-                    value={form.date}
-                    onChange={(e) => setForm({ ...form, date: e.target.value })}
-                />
-            </div>
-
-            <div className="mb-3">
-                <label>Description</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-            </div>
-
-            <div className="mb-3">
-                <label>Merchant</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={form.merchant}
-                    onChange={(e) => setForm({ ...form, merchant: e.target.value })}
-                />
-            </div>
-
-            <div className="mb-3">
-                <label>Category</label>
-                <select
-                    className="form-select"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                >
-                    <option>Food</option>
-                    <option>Travel</option>
-                    <option>Health</option>
-                    <option>Shopping</option>
-                    <option>Bills</option>
-                    <option>Other</option>
-                </select>
-            </div>
+            <style>{`
+                .animate-fade-in {
+                    animation: fadeIn 0.3s ease-in-out;
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-5px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+            `}</style>
         </Modal>
     );
 };

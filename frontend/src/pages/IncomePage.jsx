@@ -98,6 +98,7 @@ const IncomePage = () => {
                 categoryOptions={["Salary", "Freelancing", "Bonus", "Interest", "Gift", "Other"]}
                 showImport={false}
                 showExport={false}
+                showMerchants={false}
             />
 
             {loading && <LoadingSpinner />}
